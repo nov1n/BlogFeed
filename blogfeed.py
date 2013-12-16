@@ -44,7 +44,7 @@ class BlogFeed:
 		# create an indicator applet
 		self.ind = appindicator.Indicator('BlogFeed', 'blog-feed', appindicator.CATEGORY_APPLICATION_STATUS)
 		self.ind.set_status(appindicator.STATUS_ACTIVE)
-		self.ind.set_icon('blogfeed.png')  # TODO: Refactor hardcoded path
+		self.ind.set_icon(pygtk.os.path.abspath('blogfeed.png'))  # TODO: Refactor hardcoded path
 
 		# create a menu
 		self.menu = gtk.Menu()
