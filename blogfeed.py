@@ -91,7 +91,7 @@ class BlogFeed:
 	@staticmethod
 	def show_about(self, widget=None):
 		""" Show about info """
-		webbrowser.open('http://www.example.com')
+		webbrowser.open('https://github.com/nov1n/BlogFeed/')
 
 	@staticmethod
 	def quit(self, widget, data=None):
