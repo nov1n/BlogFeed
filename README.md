@@ -7,3 +7,8 @@ Usage
 ========
 
 CD into the folder where the files are located, run: python blogfeed.py.
+
+To add your own preferred subreddits add:
+  fetcher.fetch_reddit('nameOfYourSubreddit')
+right after line 133.
+
