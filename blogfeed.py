@@ -131,7 +131,7 @@ class BlogFeed:
 
 		# Fetch all the stories from the desired websites
 		fetcher = Fetcher()
-		fetcher.fetch_reddit('programming')
+		fetcher.fetch_reddit('programming', amount=5)
 		fetcher.fetch_reddit('linux')
 		fetcher.fetch_hn()
 
@@ -195,10 +195,8 @@ class Fetcher:
 		""" Get the top n (3 by default) stories from HackerNews """
 
 		# Make the api call
-		try:
-			json_data = self.api_call(self.HN_API)
-		except:
-			print 'pass %s' % self.HN_NAME
+		json_data = self.api_call(self.HN_API)
+		if not json_data:
 			return
 
 		# Create a dict as ID : points
@@ -237,10 +235,8 @@ class Fetcher:
 		subr_api = self.REDDIT_API_BASE.replace('subr', subr)  # Edit according to given subreddit
 
 		# Make the api call
-		try:
-			json_data = self.api_call(subr_api)
-		except:
-			print 'pass %s' % site
+		json_data = self.api_call(subr_api)
+		if not json_data:
 			return
 
 		# Create a dict as ID : points
