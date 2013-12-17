@@ -49,6 +49,8 @@ class BlogFeed:
 		# create a menu
 		self.menu = gtk.Menu()
 
+		self.separators = []
+
 		# create items for the menu - refresh, quit and a separator
 		menu_separator = gtk.SeparatorMenuItem()
 		menu_separator.show()
@@ -94,7 +96,7 @@ class BlogFeed:
 		webbrowser.open('https://github.com/nov1n/BlogFeed/')
 
 	@staticmethod
-	def quit(self, widget, data=None):
+	def quit(self, widget=None, data=None):
 		""" Handle the quit button """
 		gtk.main_quit()
 
@@ -128,6 +130,7 @@ class BlogFeed:
 		for i in self.menu.get_children():
 			if hasattr(i, 'url'):  # needed not to remove the menu items
 				self.menu.remove(i)
+		self.separators[:] = []  # Remove all the separators
 
 		# Fetch all the stories from the desired websites
 		fetcher = Fetcher()
@@ -139,12 +142,15 @@ class BlogFeed:
 		for site in fetcher.story_collection.itervalues():
 			# Add a title for each site
 			title = gtk.MenuItem('\t\t' + site[0].site)  # Get the name of the site
+			title.url = site[0].site  # This causes it from being removed on refresh
 			title.show()
 
 			# Add the stories from that site
 			for story in reversed(site):
 				self.add_item(story)
 			sep = gtk.SeparatorMenuItem()
+			sep.url = site[0].site  # This causes it from being removed on refresh
+			self.separators.append(sep)
 			sep.show()
 			self.menu.prepend(title)
 			self.menu.prepend(sep)
