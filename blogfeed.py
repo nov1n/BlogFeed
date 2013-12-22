@@ -134,9 +134,7 @@ class BlogFeed:
 
 		# Fetch all the stories from the desired websites
 		fetcher = Fetcher()
-		fetcher.fetch_reddit('programming', amount=5)
-		fetcher.fetch_reddit('linux')
-		fetcher.fetch_hn()
+		fetcher.fetch()
 
 		# Iterate over all the stories of all the sites and add them to the menu
 		for site in fetcher.story_collection.itervalues():
@@ -273,6 +271,22 @@ class Fetcher:
 
 		self.story_collection[site] = stories
 		if DEBUG: print string_rep(stories)
+
+	def fetch(self):
+		conf = open('feeds.config')
+		lines = conf.readlines()
+		for line in lines:
+			tokens = line.strip().split()
+			amount = 3
+			type = tokens[0]
+			if len(tokens) == 2 and isinstance(tokens[1], int):
+				amount = tokens[1]
+			if type.startswith('r/'):
+				self.fetch_reddit(type[2:], amount)
+			elif type == 'hackernews':
+				self.fetch_hn(amount)
+			else:
+				print 'Error reading: \'%s\' in the config file, invalid format.' % line.rstrip()
 
 
 def main():
