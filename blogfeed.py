@@ -279,8 +279,10 @@ class Fetcher:
 			tokens = line.strip().split()
 			amount = 3
 			type = tokens[0]
-			if len(tokens) == 2 and isinstance(tokens[1], int):
-				amount = tokens[1]
+
+			if len(tokens) == 2 and tokens[1].isdigit():
+				amount = int(tokens[1])
+
 			if type.startswith('r/'):
 				self.fetch_reddit(type[2:], amount)
 			elif type == 'hackernews':
