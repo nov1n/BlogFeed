@@ -1,6 +1,7 @@
+#!/usr/bin/env python
+
 import json
 import urllib2
-import os
 import pygtk
 pygtk.require('2.0')
 import gtk
@@ -9,7 +10,10 @@ import signal
 import appindicator
 from time import time
 
+# TODO: Make check marks on the stories persistent upon refreshes
+
 DEBUG = 1
+TITLE_LENGTH = 80
 
 
 def string_rep(iterable):
@@ -17,6 +21,17 @@ def string_rep(iterable):
 	for x in iterable:
 		print x
 
+
+def shorten(phrase):
+	if len(phrase) < TITLE_LENGTH:
+		return phrase
+	elif phrase[TITLE_LENGTH] == ' ':
+		return phrase[:TITLE_LENGTH]
+	else:
+		n = TITLE_LENGTH
+		while not phrase[n] == ' ':
+			n -= 1
+		return phrase[:n] + '...'  # Add dots to show the string was chopped
 
 def uts_to_time(uts):
 	""" Converts Unix Time Stamp to Days and Hours """
@@ -57,7 +72,7 @@ class BlogFeed:
 		self.menu.append(menu_separator)
 
 		# settings button
-		btn_settings = gtk.CheckMenuItem('Settings')
+		btn_settings = gtk.MenuItem('Settings')
 		btn_settings.show()
 		btn_settings.connect('activate', self.show_settings)
 		self.menu.append(btn_settings)
@@ -87,8 +102,9 @@ class BlogFeed:
 
 	@staticmethod
 	def show_settings(self, widget=None):
-		""" This method shows the settings panel, TODO """
-		#TODO: Implement the settings
+		""" This method shows the settings panel """
+		settings = SettingsPanel()
+		settings.main()
 
 	@staticmethod
 	def show_about(self, widget=None):
@@ -140,7 +156,7 @@ class BlogFeed:
 		for site in fetcher.story_collection.itervalues():
 			# Add a title for each site
 			title = gtk.MenuItem('\t\t' + site[0].site)  # Get the name of the site
-			title.url = site[0].site  # This causes it from being removed on refresh
+			title.url = site[0].site  # This prevents it from being removed on refresh
 			title.show()
 
 			# Add the stories from that site
@@ -172,6 +188,65 @@ class Story:
 	def __str__(self):
 		return 'Site: %s\nTitle: %s\nScore: %s\nID: %s\nDate: %s\nURL: %s\n' % (
 			self.site, self.title, self.score, self.id, self.date, self.url)
+
+
+class SettingsPanel:
+
+	def test(self, widget, data=None):
+		print 'You pressed!'
+
+
+	# This event is called by the window manager when the cross is pressed
+	def delete_event(self, widget, event, data=None):
+		return False  # Change to true if the main window should not be destroyed
+
+	def destroy(self, widget, data=None):
+		gtk.main_quit()
+
+	def __init__(self):
+		# Create a new window
+		self.window = gtk.Window(gtk.WIN_POS_MOUSE)
+
+		# Link the destroy event to the destroy function
+		# This event happens when we return False from the delete_event function
+		self.window.connect('destroy', self.destroy)
+
+		# Set title
+		self.window.set_title('Settings')
+
+		# Set the border width
+		self.window.set_border_width(10)
+
+		# Center the window
+		self.window.set_position(gtk.WIN_POS_MOUSE) # TODO: Fix log error here
+
+		# Set windows size
+		self.window.set_size_request(250, 350)
+
+		# Disable resizing
+		self.window.set_resizable(False)
+
+		# Create a button
+		self.button = gtk.Button('Hey there!')
+
+		# Connect the button click event to the signal handler function
+		self.button.connect('clicked', self.test, None)
+
+		# Make the button generate a destroy signal when pressed
+		self.button.connect_object('clicked', gtk.Widget.destroy, self.window)
+
+		# Add the button to the container
+		self.window.add(self.button)
+
+		# Show the button
+		self.button.show()
+
+		# Show the window
+		self.window.show()
+
+	def main(self):
+		# Control ends here, waiting for an event to occur
+		gtk.main()
 
 
 class Fetcher:
@@ -224,10 +299,11 @@ class Fetcher:
 		for item in top:
 			id = item['id']
 			title = item['title']
+			title_short = shorten(title)
 			score = item['points']
 			date = item['postedAgo']
 			url = item['url']
-			stories.append(Story(self.HN_NAME, title, score, id, date, url))
+			stories.append(Story(self.HN_NAME, title_short, score, id, date, url))
 
 		self.story_collection[self.HN_NAME] = stories # Add the list of stories to the collection
 		if DEBUG: print string_rep(stories)
@@ -264,16 +340,17 @@ class Fetcher:
 		for item in top:
 			id = item['data']['id']
 			title = item['data']['title']
+			title_short = shorten(title)
 			score = item['data']['score']
 			date = uts_to_time(time() - item['data']['created'])
 			url = item['data']['url']
-			stories.append(Story(site, title, score, id, date, url))
+			stories.append(Story(site, title_short, score, id, date, url))
 
 		self.story_collection[site] = stories
 		if DEBUG: print string_rep(stories)
 
 	def fetch(self):
-		conf = open('feeds.config')
+		conf = open('feeds.config')  # TODO: try catch this on first run
 		lines = conf.readlines()
 		for line in lines:
 			tokens = line.strip().split()
