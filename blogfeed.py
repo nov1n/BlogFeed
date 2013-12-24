@@ -14,6 +14,7 @@ from time import time
 
 DEBUG = 1
 TITLE_LENGTH = 80
+CONFIG_FILE = 'feeds.config'
 
 
 def string_rep(iterable):
@@ -22,8 +23,24 @@ def string_rep(iterable):
 		print x
 
 
+def read_config():
+	try:
+		conf = open(CONFIG_FILE, 'a+')  # Creates the file if nonexistent
+	except IOError as e:
+		print 'Something went wrong reading the configuration file: ' + e.message
+		return
+	lines = conf.readlines()
+	if not lines:  # If config file is empty, show a dialog box
+		message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
+		message.set_markup('No websites found. Please head to the settings to add websites.')
+		response = message.run()
+		if response == gtk.RESPONSE_OK:
+			message.destroy()
+	return lines
+
+
 def shorten(phrase):
-	if len(phrase) < TITLE_LENGTH:
+	if len(phrase) <= TITLE_LENGTH:
 		return phrase
 	elif phrase[TITLE_LENGTH] == ' ':
 		return phrase[:TITLE_LENGTH]
@@ -32,6 +49,7 @@ def shorten(phrase):
 		while not phrase[n] == ' ':
 			n -= 1
 		return phrase[:n] + '...'  # Add dots to show the string was chopped
+
 
 def uts_to_time(uts):
 	""" Converts Unix Time Stamp to Days and Hours """
@@ -153,6 +171,7 @@ class BlogFeed:
 		fetcher.fetch()
 
 		# Iterate over all the stories of all the sites and add them to the menu
+		sep = gtk.SeparatorMenuItem()
 		for site in fetcher.story_collection.itervalues():
 			# Add a title for each site
 			title = gtk.MenuItem('\t\t' + site[0].site)  # Get the name of the site
@@ -218,7 +237,7 @@ class SettingsPanel:
 		self.window.set_border_width(10)
 
 		# Center the window
-		self.window.set_position(gtk.WIN_POS_MOUSE) # TODO: Fix log error here
+		self.window.set_position(gtk.WIN_POS_MOUSE)  # TODO: Fix log error here
 
 		# Set windows size
 		self.window.set_size_request(250, 350)
@@ -226,25 +245,32 @@ class SettingsPanel:
 		# Disable resizing
 		self.window.set_resizable(False)
 
-		# Create a button
-		self.button = gtk.Button('Hey there!')
+		# Create the list to fill the TreeView
+		self.feeds_liststore = gtk.ListStore(str, int)
+		# Create a TreeView for the feeds
+		self.treeview = gtk.TreeView(self.feeds_liststore)
+		# Create column for the feed
+		self.feed_column = gtk.TreeViewColumn()
+		self.feed_column.set_title('Name')
+		# Create column for the amount
+		self.amount_column = gtk.TreeViewColumn()
+		self.amount_column.set_title('Amount')
+		# Add the columns to the treeview
+		self.treeview.append_column(self.feed_column)
+		self.treeview.append_column(self.amount_column)
 
-		# Connect the button click event to the signal handler function
-		self.button.connect('clicked', self.test, None)
-
-		# Make the button generate a destroy signal when pressed
-		self.button.connect_object('clicked', gtk.Widget.destroy, self.window)
-
-		# Add the button to the container
-		self.window.add(self.button)
-
-		# Show the button
-		self.button.show()
+		# Add the tree to the window
+		self.window.add(self.treeview)
 
 		# Show the window
-		self.window.show()
+		self.window.show_all()
+
+	def fill_feed(self):
+		open
 
 	def main(self):
+		# Fill the treeview
+		self.fill_feed()
 		# Control ends here, waiting for an event to occur
 		gtk.main()
 
@@ -350,8 +376,7 @@ class Fetcher:
 		if DEBUG: print string_rep(stories)
 
 	def fetch(self):
-		conf = open('feeds.config')  # TODO: try catch this on first run
-		lines = conf.readlines()
+		lines = read_config()
 		for line in lines:
 			tokens = line.strip().split()
 			amount = 3
