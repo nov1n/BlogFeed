@@ -90,34 +90,29 @@ class BlogFeed:
 
 		# create items for the menu - refresh, quit and a separator
 		menu_separator = gtk.SeparatorMenuItem()
-		menu_separator.show()
 		self.menu.append(menu_separator)
 
 		# settings button
 		btn_settings = gtk.MenuItem('Settings')
-		btn_settings.show()
 		btn_settings.connect('activate', self.show_settings)
 		self.menu.append(btn_settings)
 
 		# about button
 		btn_about = gtk.MenuItem('About')
-		btn_about.show()
 		btn_about.connect('activate', self.show_about)
 		self.menu.append(btn_about)
 
 		# refresh button
 		btn_refresh = gtk.MenuItem('Refresh')
-		btn_refresh.show()
 		btn_refresh.connect('activate', self.refresh, True)  # The last parameter is for not running the timer
 		self.menu.append(btn_refresh)
 
 		# quit button
 		btn_quit = gtk.MenuItem('Quit')
-		btn_quit.show()
 		btn_quit.connect('activate', self.quit)
 		self.menu.append(btn_quit)
 
-		self.menu.show()
+		self.menu.show_all()
 
 		self.ind.set_menu(self.menu)
 		self.refresh()
@@ -269,6 +264,7 @@ class SettingsPanel:
 
 	def fill_feed(self):
 		# TODO: Implement this
+
 		pass
 
 	def main(self):
