@@ -243,18 +243,20 @@ class SettingsPanel:
 		self.window.set_resizable(False)
 
 		# Create the list to fill the TreeView
-		self.feeds_liststore = gtk.ListStore(str, int)
+		self.feeds_liststore = gtk.ListStore(str, str)
 		# Create a TreeView for the feeds
-		self.treeview = gtk.TreeView(self.feeds_liststore)
-		# Create column for the feed
-		self.feed_column = gtk.TreeViewColumn()
-		self.feed_column.set_title('Name')
-		# Create column for the amount
-		self.amount_column = gtk.TreeViewColumn()
-		self.amount_column.set_title('Amount')
-		# Add the columns to the treeview
-		self.treeview.append_column(self.feed_column)
-		self.treeview.append_column(self.amount_column)
+		self.treeview = gtk.TreeView(model=self.feeds_liststore)
+
+		# Create the columns
+		columns = ['Title', 'Amount']
+
+		for i in range(len(columns)):
+			# Cellrenderer to render the text
+			cell = gtk.CellRendererText()
+			# the column is created
+			col = gtk.TreeViewColumn(columns[i], cell, text=i)
+			# and it is appended to the treeview
+			self.treeview.append_column(col)
 
 		# Add the tree to the window
 		self.window.add(self.treeview)
@@ -262,14 +264,15 @@ class SettingsPanel:
 		# Show the window
 		self.window.show_all()
 
-	def fill_feed(self):
-		# TODO: Implement this
-
-		pass
+	def sync_feeds(self):
+		lines = read_config()
+		for line in lines:
+			print line.split()
+			self.feeds_liststore.append(line.split())
 
 	def main(self):
 		# Fill the treeview
-		self.fill_feed()
+		self.sync_feeds()
 		# Control ends here, waiting for an event to occur
 		gtk.main()
 
