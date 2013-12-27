@@ -15,6 +15,10 @@ from time import time
 DEBUG = 1
 TITLE_LENGTH = 80
 CONFIG_FILE = 'feeds.config'
+APP_TITLE = 'BlogFeed'
+APP_D = 'blog-feed'
+ICON_PATH = 'blogfeed.png'
+GITHUB_LINK = 'https://github.com/nov1n/BlogFeed/'
 
 
 def string_rep(iterable):
@@ -75,9 +79,9 @@ class BlogFeed:
 	""" Represents the app indicator filled with stories from various websites """
 	def __init__(self):
 		# create an indicator applet
-		self.ind = appindicator.Indicator('BlogFeed', 'blog-feed', appindicator.CATEGORY_APPLICATION_STATUS)
+		self.ind = appindicator.Indicator(APP_TITLE, APP_D, appindicator.CATEGORY_APPLICATION_STATUS)
 		self.ind.set_status(appindicator.STATUS_ACTIVE)
-		self.ind.set_icon(pygtk.os.path.abspath('blogfeed.png'))  # TODO: Refactor hardcoded path
+		self.ind.set_icon(pygtk.os.path.abspath(ICON_PATH))
 
 		# create a menu
 		self.menu = gtk.Menu()
@@ -127,7 +131,7 @@ class BlogFeed:
 	@staticmethod
 	def show_about(self, widget=None):
 		""" Show about info """
-		webbrowser.open('https://github.com/nov1n/BlogFeed/')
+		webbrowser.open(GITHUB_LINK)
 
 	@staticmethod
 	def quit(self, widget=None, data=None):
@@ -211,14 +215,12 @@ class Story:
 
 class SettingsPanel:
 
-	def test(self, widget, data=None):
-		print 'You pressed!'
-
-
 	# This event is called by the window manager when the cross is pressed
+	@staticmethod
 	def delete_event(self, widget, event, data=None):
 		return False  # Change to true if the main window should not be destroyed
 
+	@staticmethod
 	def destroy(self, widget, data=None):
 		gtk.main_quit()
 
@@ -266,7 +268,8 @@ class SettingsPanel:
 		self.window.show_all()
 
 	def fill_feed(self):
-		open
+		# TODO: Implement this
+		pass
 
 	def main(self):
 		# Fill the treeview
@@ -390,7 +393,7 @@ class Fetcher:
 			elif type == 'hackernews':
 				self.fetch_hn(amount)
 			else:
-				print 'Error reading: \'%s\' in the config file, invalid format.' % line.rstrip()
+				print 'Error reading: \'%s\', invalid format.' % line.rstrip()
 
 
 def main():
