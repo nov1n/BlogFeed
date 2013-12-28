@@ -39,7 +39,7 @@ def read_config():
 		message.set_markup('No websites found. Please head to the settings to add websites.')
 		response = message.run()
 		if response == gtk.RESPONSE_OK:
-			message.destroy()
+			message.destroy(0)
 	return lines
 
 
@@ -225,7 +225,7 @@ class SettingsPanel:
 
 		# Link the destroy event to the destroy function
 		# This event happens when we return False from the delete_event function
-		self.window.connect('destroy', self.destroy)
+		self.window.connect('destroy', self.destroy, 1)
 
 		# Set title
 		self.window.set_title('Settings')
@@ -237,7 +237,7 @@ class SettingsPanel:
 		self.window.set_position(gtk.WIN_POS_MOUSE)  # TODO: Fix log error here
 
 		# Set windows size
-		self.window.set_size_request(250, 350)
+		self.window.set_size_request(500, 200)
 
 		# Disable resizing
 		self.window.set_resizable(False)
@@ -248,21 +248,77 @@ class SettingsPanel:
 		self.treeview = gtk.TreeView(model=self.feeds_liststore)
 
 		# Create the columns
-		columns = ['Title', 'Amount']
+		columns = ['Location', 'Amount']
 
 		for i in range(len(columns)):
 			# Cellrenderer to render the text
 			cell = gtk.CellRendererText()
+			cell.connect('edited', self.on_cell_edited, (self.feeds_liststore, i))
+			cell.set_property('editable', True)
 			# the column is created
 			col = gtk.TreeViewColumn(columns[i], cell, text=i)
 			# and it is appended to the treeview
 			self.treeview.append_column(col)
 
-		# Add the tree to the window
-		self.window.add(self.treeview)
+		# when a row of the treeview is selected, it emits a signal
+		self.selection = self.treeview.get_selection()
+
+		# a button to add new websites, connected to a callback function
+		self.button_add = gtk.Button(label="Add")
+		self.button_add.connect("clicked", self.add_cb)
+
+		# Two entries for the location and the amount
+		self.location_entry = gtk.Entry()
+		self.amount_entry = gtk.Entry()
+
+		# a button to remove locations, connected to a callback function
+		self.button_remove = gtk.Button(label="Remove")
+		self.button_remove.connect("clicked", self.remove_cb)
+
+		# a button to remove all locations, connected to a callback function
+		self.button_remove_all = gtk.Button(label="Remove All")
+		self.button_remove_all.connect("clicked", self.remove_all_cb)
+
+		# a grid to attach the widgets
+		grid = gtk.Table(8, 10, False)
+		grid.set_col_spacing(5, 5)
+		grid.attach(self.treeview, 0, 7, 0, 7)
+		grid.attach(gtk.HSeparator(), 0, 7, 7, 8)
+		grid.attach(self.button_add, 0, 1, 8, 9, gtk.SHRINK)
+		grid.attach(self.location_entry, 1, 3, 8, 9)
+		grid.attach(self.amount_entry, 3, 4, 8, 9)
+		grid.attach(gtk.VSeparator(), 4, 5, 8, 9)
+		grid.attach(self.button_remove, 5, 6, 8, 9, gtk.SHRINK)
+		grid.attach(self.button_remove_all, 6, 7, 8, 9, gtk.SHRINK)
+
+		# Normalize
+		self.amount_entry.set_size_request(50, 30)
+		self.location_entry.set_size_request(100, 30)
+		self.button_remove.set_size_request(70, 30)
+		self.button_remove_all.set_size_request(100, 30)
+		self.button_add.set_size_request(50, 30)
+
+		self.window.add(grid)
 
 		# Show the window
 		self.window.show_all()
+
+	def on_cell_edited(self, cell, path, new_text, user_data):
+		self.feeds_liststore, column = user_data
+		self.feeds_liststore[path][column] = new_text
+		return
+
+	def on_changed(self):
+		pass
+
+	def add_cb(self):
+		pass
+
+	def remove_cb(self):
+		pass
+
+	def remove_all_cb(self):
+		pass
 
 	def sync_feeds(self):
 		lines = read_config()
