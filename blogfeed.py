@@ -28,20 +28,24 @@ def string_rep(iterable):
 		print x
 
 
+def show_dialog_ok(text):
+	message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
+	message.set_markup(text)
+	response = message.run()
+	if response == gtk.RESPONSE_OK:
+		message.destroy()
+
+
 def read_config():
 	""" Open the config file, if nonexistent create it and return the containing lines """
 	try:
 		conf = open(CONFIG_FILE, 'a+')  # Creates the file if nonexistent
 	except IOError as e:
 		print 'Something went wrong reading the configuration file: ' + e.message
-		return
+		return()
 	lines = conf.readlines()
 	if not lines:  # If config file is empty, show a dialog box
-		message = gtk.MessageDialog(type=gtk.MESSAGE_INFO, buttons=gtk.BUTTONS_OK)
-		message.set_markup('No websites found. Please head to the settings to add websites.')
-		response = message.run()
-		if response == gtk.RESPONSE_OK:
-			message.destroy(0)
+		show_dialog_ok('No websites found. Please head to the settings to add websites.')
 	return lines
 
 
@@ -132,7 +136,7 @@ class BlogFeed:
 		webbrowser.open(GITHUB_LINK)
 
 	@staticmethod
-	def quit(self, widget=None, data=None):
+	def quit(self, widget=None):
 		""" Handle the quit button """
 		gtk.main_quit()
 
@@ -251,6 +255,9 @@ class SettingsPanel:
 		self.feeds_liststore = gtk.ListStore(str, str)
 		# Create a TreeView for the feeds
 		self.treeview = gtk.TreeView(model=self.feeds_liststore)
+		# Put the TreeView in a scrollable container
+		self.scrolled_window = gtk.ScrolledWindow()
+		self.scrolled_window.add(self.treeview)
 
 		# Create the columns
 		columns = ['Location', 'Amount']
@@ -268,7 +275,7 @@ class SettingsPanel:
 		# when a row of the treeview is selected, it emits a signal
 		self.selection = self.treeview.get_selection()
 
-		# a button to add new websites, connected to a callback function
+		# a button to add new locations, connected to a callback function
 		self.button_add = gtk.Button(label="Add")
 		self.button_add.connect("clicked", self.add_cb)
 
@@ -276,18 +283,18 @@ class SettingsPanel:
 		self.location_entry = gtk.Entry()
 		self.amount_entry = gtk.Entry()
 
-		# a button to remove locations, connected to a callback function
+		# A button to remove locations, connected to a callback function
 		self.button_remove = gtk.Button(label="Remove")
 		self.button_remove.connect("clicked", self.remove_cb)
 
-		# a button to remove all locations, connected to a callback function
+		# A button to remove all locations, connected to a callback function
 		self.button_remove_all = gtk.Button(label="Remove All")
 		self.button_remove_all.connect("clicked", self.remove_all_cb)
 
 		# a grid to attach the widgets
 		grid = gtk.Table(8, 10, False)
 		grid.set_col_spacing(5, 5)
-		grid.attach(self.treeview, 0, 7, 0, 7)
+		grid.attach(self.scrolled_window, 0, 7, 0, 7)
 		grid.attach(gtk.HSeparator(), 0, 7, 7, 8)
 		grid.attach(self.button_add, 0, 1, 8, 9, gtk.SHRINK)
 		grid.attach(self.location_entry, 1, 3, 8, 9)
@@ -314,17 +321,24 @@ class SettingsPanel:
 		self.feeds_liststore[path][column] = new_text
 		return
 
-	def add_cb(self):
+	def add_cb(self, widget):
 		""" Add button callback handler """
-		pass
+		location = self.location_entry.get_text()
+		amount = self.amount_entry.get_text()
+		if not location:
+			show_dialog_ok('Please enter a location')
+			return
+		if not amount:
+			amount = 3
+		self.feeds_liststore.append([location, amount])
 
-	def remove_cb(self):
+	def remove_cb(self, widget):
 		""" Remove button callback handler """
 		pass
 
-	def remove_all_cb(self):
+	def remove_all_cb(self, widget):
 		""" Remove all button callback handler """
-		pass
+		self.feeds_liststore.clear()
 
 	def sync_feeds(self):
 		""" Fill the TreeView model (liststore) with the data from the config file """
