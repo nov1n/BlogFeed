@@ -14,6 +14,7 @@ from time import time
 
 DEBUG = 1
 TITLE_LENGTH = 80
+REFRESH_INTERVAL = 5 * 60 * 1000  # 5 minutes
 CONFIG_FILE = 'feeds.config'
 APP_TITLE = 'BlogFeed'
 APP_D = 'blog-feed'
@@ -22,12 +23,13 @@ GITHUB_LINK = 'https://github.com/nov1n/BlogFeed/'
 
 
 def string_rep(iterable):
-	""" Prints the String representation for an iterable """
+	""" Prints the String representation for an iterable, used for logging """
 	for x in iterable:
 		print x
 
 
 def read_config():
+	""" Open the config file, if nonexistent create it and return the containing lines """
 	try:
 		conf = open(CONFIG_FILE, 'a+')  # Creates the file if nonexistent
 	except IOError as e:
@@ -44,6 +46,7 @@ def read_config():
 
 
 def shorten(phrase):
+	""" Shortens the title of a story to the desired length, adds dots for more fancyness """
 	if len(phrase) <= TITLE_LENGTH:
 		return phrase
 	elif phrase[TITLE_LENGTH] == ' ':
@@ -188,13 +191,14 @@ class BlogFeed:
 			self.menu.prepend(sep)
 		self.menu.remove(sep)  # Remove the top separator --> unnecessary
 
-		# Call every 5 minutes
+		# Refresh every 5 minutes
 		if not no_timer:
-			gtk.timeout_add(5 * 60 * 1000, self.refresh)
+			gtk.timeout_add(REFRESH_INTERVAL, self.refresh)
 
 
 class Story:
 	""" Contains information about a story """
+
 	def __init__(self, site='Unknown', title='Unknown', score='Unknown', id='Unknown', date='Unknown', url='Unknown'):
 		self.site = site
 		self.title = title
@@ -209,6 +213,7 @@ class Story:
 
 
 class SettingsPanel:
+	""" Displays the settings panel which allows user to define the locations from which the stories are fetched """
 
 	# This event is called by the window manager when the cross is pressed
 	@staticmethod
@@ -304,29 +309,32 @@ class SettingsPanel:
 		self.window.show_all()
 
 	def on_cell_edited(self, cell, path, new_text, user_data):
+		""" On edited callback handler """
 		self.feeds_liststore, column = user_data
 		self.feeds_liststore[path][column] = new_text
 		return
 
-	def on_changed(self):
-		pass
-
 	def add_cb(self):
+		""" Add button callback handler """
 		pass
 
 	def remove_cb(self):
+		""" Remove button callback handler """
 		pass
 
 	def remove_all_cb(self):
+		""" Remove all button callback handler """
 		pass
 
 	def sync_feeds(self):
+		""" Fill the TreeView model (liststore) with the data from the config file """
 		lines = read_config()
 		for line in lines:
 			print line.split()
 			self.feeds_liststore.append(line.split())
 
 	def main(self):
+		""" Fill the listview and display the settings panel """
 		# Fill the treeview
 		self.sync_feeds()
 		# Control ends here, waiting for an event to occur
@@ -347,6 +355,7 @@ class Fetcher:
 		pass
 
 	def api_call(self, url):
+		""" Send a request to the API server and return the json contents loaded into a Python dictionary """
 		req = urllib2.Request(url, None, self.HEADERS)
 		try:
 			data = urllib2.urlopen(req)
@@ -434,6 +443,7 @@ class Fetcher:
 		if DEBUG: print string_rep(stories)
 
 	def fetch(self):
+		""" Fetch the stories from all the locations specified in the configuration file """
 		lines = read_config()
 		for line in lines:
 			tokens = line.strip().split()
@@ -452,6 +462,7 @@ class Fetcher:
 
 
 def main():
+	""" Driver boilerplate """
 	indicator = BlogFeed()
 	indicator.run()
 
