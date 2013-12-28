@@ -221,11 +221,11 @@ class SettingsPanel:
 
 	def __init__(self):
 		# Create a new window
-		self.window = gtk.Window(gtk.WIN_POS_MOUSE)
+		self.window = gtk.Window()
 
 		# Link the destroy event to the destroy function
 		# This event happens when we return False from the delete_event function
-		self.window.connect('destroy', self.destroy, 1)
+		self.window.connect('destroy', self.destroy, 0)
 
 		# Set title
 		self.window.set_title('Settings')
@@ -234,7 +234,7 @@ class SettingsPanel:
 		self.window.set_border_width(10)
 
 		# Center the window
-		self.window.set_position(gtk.WIN_POS_MOUSE)  # TODO: Fix log error here
+		self.window.set_position(gtk.WIN_POS_MOUSE)
 
 		# Set windows size
 		self.window.set_size_request(500, 200)
