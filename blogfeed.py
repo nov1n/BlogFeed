@@ -12,15 +12,18 @@ import appindicator
 from time import time
 
 # TODO: Make check marks on the stories persistent upon refreshes
+# TODO: Remove duplicates from history file
 
 DEBUG = 1
 TITLE_LENGTH = 80
 REFRESH_INTERVAL = 5 * 60 * 1000  # 5 minutes
 CONFIG_FILE = 'feeds.config'
+HISTORY_FILE = 'feeds.history'
 APP_TITLE = 'BlogFeed'
 APP_D = 'blog-feed'
 ICON_PATH = 'blogfeed.png'
 GITHUB_LINK = 'https://github.com/nov1n/BlogFeed/'
+HEADERS = {'User-Agent': 'blogfeed-133'}
 
 
 def string_rep(iterable):
@@ -48,13 +51,13 @@ def show_dialog_ok(text):
 def read_config():
 	""" Open the config file, if nonexistent create it and return the containing lines """
 	try:
-		conf = open(CONFIG_FILE, 'a+')  # Creates the file if nonexistent
+		conf = open(get_resource_path(CONFIG_FILE), 'a+')  # Creates the file if nonexistent
 	except IOError as e:
 		print 'Something went wrong reading the configuration file: ' + e.message
 		return()
 	lines = conf.readlines()
 	if not lines:  # If config file is empty, show a dialog box
-		show_dialog_ok('No websites found. Please head to the settings to add websites.')
+		show_dialog_ok('No locations found. Please head to the settings to add them.')
 	return lines
 
 
@@ -89,6 +92,16 @@ def uts_to_time(uts):
 			return str(hours) + " hours ago"
 		else:
 			return "1 hour ago"
+
+
+def api_call(url):
+	""" Send a request to the API server and return the json contents loaded into a Python dictionary """
+	req = urllib2.Request(url, None, HEADERS)
+	try:
+		data = urllib2.urlopen(req)
+		return json.load(data)
+	except Exception, e:
+		print 'Could not connect to server: %s, %s' % (url, str(e))
 
 
 class BlogFeed:
@@ -156,7 +169,12 @@ class BlogFeed:
 
 	def open(self, widget):
 		""" Opens the link in the web browser """
-		if not widget.get_active():
+		id = widget.item_id
+		if widget.get_active():
+			print 'Writing to history file..'
+			history = open(get_resource_path(HISTORY_FILE), 'a+')
+			history.write(str(hash(id)) + '\n')  # Write the hashed id to the file
+		else:
 			widget.disconnect(widget.signal_id)
 			widget.set_active(True)
 			widget.signal_id = widget.connect('activate', self.open)
@@ -170,6 +188,12 @@ class BlogFeed:
 		i.signal_id = i.connect('activate', self.open)
 		i.hn_id = item.id
 		i.item_id = item.id
+		history = open(get_resource_path(HISTORY_FILE), 'r')
+		for line in history.readlines():
+			print hash(i.item_id), str(line)
+			if str(hash(i.item_id)) == str(line).rstrip():
+				i.set_active(True)
+		history.close()
 		self.menu.prepend(i)
 		i.show()
 
@@ -263,8 +287,10 @@ class SettingsPanel:
 
 		# Create the list to fill the TreeView
 		self.feeds_liststore = gtk.ListStore(str, str)
+
 		# Create a TreeView for the feeds
 		self.treeview = gtk.TreeView(model=self.feeds_liststore)
+
 		# Put the TreeView in a scrollable container
 		self.scrolled_window = gtk.ScrolledWindow()
 		self.scrolled_window.add(self.treeview)
@@ -306,7 +332,7 @@ class SettingsPanel:
 		self.button_remove_all = gtk.Button(label="Remove All")
 		self.button_remove_all.connect("clicked", self.remove_all_cb)
 
-		# a grid to attach the widgets
+		# A grid to attach the widgets
 		grid = gtk.Table(8, 10, False)
 		grid.set_col_spacing(15, 15)
 		grid.attach(self.scrolled_window, 0, 7, 0, 6)
@@ -360,7 +386,7 @@ class SettingsPanel:
 		self.feeds_liststore.clear()
 
 	def save_cb(self, widget):
-		conf = open(CONFIG_FILE, 'w')
+		conf = open(get_resource_path(CONFIG_FILE), 'w')
 		for item in self.feeds_liststore:
 			conf.write(item[0] + ' ' + item[1] + '\n')
 		conf.close()
@@ -387,27 +413,17 @@ class Fetcher:
 	HN_NAME = 'Hacker News'
 	REDDIT_API_BASE = 'http://www.reddit.com/r/subr/hot.json'
 	REDDIT_NAME = 'Reddit'
-	HEADERS = {'User-Agent': 'blogfeed-133'}
 
 	story_collection = {}
 
 	def __init__(self):
 		pass
 
-	def api_call(self, url):
-		""" Send a request to the API server and return the json contents loaded into a Python dictionary """
-		req = urllib2.Request(url, None, self.HEADERS)
-		try:
-			data = urllib2.urlopen(req)
-			return json.load(data)
-		except Exception, e:
-			print 'Could not connect to server: %s, %s' % (url, str(e))
-
 	def fetch_hn(self, amount=3):
 		""" Get the top n (3 by default) stories from HackerNews """
 
 		# Make the api call
-		json_data = self.api_call(self.HN_API)
+		json_data = api_call(self.HN_API)
 		if not json_data:
 			return
 
@@ -448,7 +464,7 @@ class Fetcher:
 		subr_api = self.REDDIT_API_BASE.replace('subr', subr)  # Edit according to given subreddit
 
 		# Make the api call
-		json_data = self.api_call(subr_api)
+		json_data = api_call(subr_api)
 		if not json_data:
 			return
 
