@@ -2,6 +2,7 @@
 
 import json
 import urllib2
+import os
 import pygtk
 pygtk.require('2.0')
 import gtk
@@ -11,8 +12,6 @@ import appindicator
 from time import time
 
 # TODO: Make check marks on the stories persistent upon refreshes
-# TODO: Add a save button to the settings panel
-# TODO: Create a decent looking layout for the settings panel
 
 DEBUG = 1
 TITLE_LENGTH = 80
@@ -28,6 +27,14 @@ def string_rep(iterable):
 	""" Prints the String representation for an iterable, used for logging """
 	for x in iterable:
 		print x
+
+
+def get_resource_path(rel_path):
+	""" Fetches the absolute path from a relative path """
+	dir_of_py_file = os.path.dirname(__file__)
+	rel_path_to_resource = os.path.join(dir_of_py_file, rel_path)
+	abs_path_to_resource = os.path.abspath(rel_path_to_resource)
+	return abs_path_to_resource
 
 
 def show_dialog_ok(text):
@@ -90,7 +97,7 @@ class BlogFeed:
 		# create an indicator applet
 		self.ind = appindicator.Indicator(APP_TITLE, APP_D, appindicator.CATEGORY_APPLICATION_STATUS)
 		self.ind.set_status(appindicator.STATUS_ACTIVE)
-		self.ind.set_icon(pygtk.os.path.abspath(ICON_PATH))
+		self.ind.set_icon(get_resource_path(ICON_PATH))
 
 		# create a menu
 		self.menu = gtk.Menu()
@@ -348,7 +355,11 @@ class SettingsPanel:
 		self.feeds_liststore.clear()
 
 	def save_cb(self, widget):
-		pass
+		conf = open(CONFIG_FILE, 'w')
+		for item in self.feeds_liststore:
+			conf.write(item[0] + ' ' + item[1] + '\n')
+		conf.close()
+		show_dialog_ok('Settings saved.')
 
 	def sync_feeds(self):
 		""" Fill the TreeView model (liststore) with the data from the config file """
