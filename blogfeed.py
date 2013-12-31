@@ -238,6 +238,7 @@ class SettingsPanel:
 		gtk.main_quit()
 
 	def __init__(self):
+
 		# Create a new window
 		self.window = gtk.Window()
 
@@ -283,6 +284,7 @@ class SettingsPanel:
 
 		# when a row of the treeview is selected, it emits a signal
 		self.selection = self.treeview.get_selection()
+		self.selection.set_mode(gtk.SELECTION_MULTIPLE)
 
 		# a button to add new locations, connected to a callback function
 		self.button_add = gtk.Button(label="Add")
@@ -348,7 +350,10 @@ class SettingsPanel:
 
 	def remove_cb(self, widget):
 		""" Remove button callback handler """
-		pass
+		(model, pathlist) = self.selection.get_selected_rows()
+		for path in pathlist:
+			tree_iter = model.get_iter(path)
+			self.feeds_liststore.remove(tree_iter)
 
 	def remove_all_cb(self, widget):
 		""" Remove all button callback handler """
