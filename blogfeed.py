@@ -11,6 +11,8 @@ import appindicator
 from time import time
 
 # TODO: Make check marks on the stories persistent upon refreshes
+# TODO: Add a save button to the settings panel
+# TODO: Create a decent looking layout for the settings panel
 
 DEBUG = 1
 TITLE_LENGTH = 80
@@ -246,7 +248,7 @@ class SettingsPanel:
 		self.window.set_position(gtk.WIN_POS_MOUSE)
 
 		# Set windows size
-		self.window.set_size_request(500, 200)
+		self.window.set_size_request(300, 200)
 
 		# Disable resizing
 		self.window.set_resizable(False)
@@ -287,28 +289,33 @@ class SettingsPanel:
 		self.button_remove = gtk.Button(label="Remove")
 		self.button_remove.connect("clicked", self.remove_cb)
 
+		# A button to save the changes connected to a callback
+		self.button_save = gtk.Button(label="Save")
+		self.button_save.connect("clicked", self.save_cb)
+
 		# A button to remove all locations, connected to a callback function
 		self.button_remove_all = gtk.Button(label="Remove All")
 		self.button_remove_all.connect("clicked", self.remove_all_cb)
 
 		# a grid to attach the widgets
 		grid = gtk.Table(8, 10, False)
-		grid.set_col_spacing(5, 5)
-		grid.attach(self.scrolled_window, 0, 7, 0, 7)
-		grid.attach(gtk.HSeparator(), 0, 7, 7, 8)
-		grid.attach(self.button_add, 0, 1, 8, 9, gtk.SHRINK)
+		grid.set_col_spacing(15, 15)
+		grid.attach(self.scrolled_window, 0, 7, 0, 6)
+		grid.attach(gtk.HSeparator(), 0, 7, 6, 7)
+		grid.attach(self.button_remove, 0, 1, 7, 8)
+		grid.attach(self.button_remove_all, 1, 2, 7, 8)
+		grid.attach(self.button_save, 3, 4, 7, 8)
+		grid.attach(self.button_add, 0, 1, 8, 9)
 		grid.attach(self.location_entry, 1, 3, 8, 9)
 		grid.attach(self.amount_entry, 3, 4, 8, 9)
-		grid.attach(gtk.VSeparator(), 4, 5, 8, 9)
-		grid.attach(self.button_remove, 5, 6, 8, 9, gtk.SHRINK)
-		grid.attach(self.button_remove_all, 6, 7, 8, 9, gtk.SHRINK)
 
 		# Normalize
+		self.scrolled_window.set_size_request(240, 120)
 		self.amount_entry.set_size_request(50, 30)
 		self.location_entry.set_size_request(100, 30)
 		self.button_remove.set_size_request(70, 30)
 		self.button_remove_all.set_size_request(100, 30)
-		self.button_add.set_size_request(50, 30)
+		self.button_add.set_size_request(30, 20)
 
 		self.window.add(grid)
 
@@ -339,6 +346,9 @@ class SettingsPanel:
 	def remove_all_cb(self, widget):
 		""" Remove all button callback handler """
 		self.feeds_liststore.clear()
+
+	def save_cb(self, widget):
+		pass
 
 	def sync_feeds(self):
 		""" Fill the TreeView model (liststore) with the data from the config file """
