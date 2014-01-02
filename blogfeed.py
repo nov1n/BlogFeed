@@ -170,11 +170,14 @@ class BlogFeed:
 	def open(self, widget):
 		""" Opens the link in the web browser """
 		id = widget.item_id
+		webbrowser.open(widget.url)
 		if widget.get_active():
 			print 'Writing to history file..'
+			history = read_config()
+			if hash(id) in history:  # ID already written to the history file
+				return
 			history = open(get_resource_path(HISTORY_FILE), 'a+')
 			history.write(str(hash(id)) + '\n')  # Write the hashed id to the file
-		webbrowser.open(widget.url)
 
 	def add_item(self, item):
 		""" Adds an item to the menu """
