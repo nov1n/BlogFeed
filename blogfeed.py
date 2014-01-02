@@ -178,7 +178,7 @@ class BlogFeed:
 				return
 			history = open(get_resource_path(HISTORY_FILE), 'a+')
 			history.write(id + '\n')  # Write the hashed id to the file
-		else:  # This prevents the check mark from toggling without opening the webpage twice
+		else:  # This prevents the check mark from toggling and opening the webpage twice
 			widget.disconnect(widget.signal_id)
 			widget.set_active(True)
 			widget.signal_id = widget.connect('activate', self.open)
