@@ -11,12 +11,12 @@ import signal
 import appindicator
 from time import time
 
-# TODO: Make check marks on the stories persistent upon refreshes
 # TODO: Remove duplicates from history file
 
 DEBUG = 1
 TITLE_LENGTH = 80
 REFRESH_INTERVAL = 5 * 60 * 1000  # 5 minutes
+
 CONFIG_FILE = 'feeds.config'
 HISTORY_FILE = 'feeds.history'
 APP_TITLE = 'BlogFeed'
@@ -107,36 +107,36 @@ def api_call(url):
 class BlogFeed:
 	""" Represents the app indicator filled with stories from various websites """
 	def __init__(self):
-		# create an indicator applet
+		# Create an indicator applet
 		self.ind = appindicator.Indicator(APP_TITLE, APP_D, appindicator.CATEGORY_APPLICATION_STATUS)
 		self.ind.set_status(appindicator.STATUS_ACTIVE)
 		self.ind.set_icon(get_resource_path(ICON_PATH))
 
-		# create a menu
+		# Create a menu
 		self.menu = gtk.Menu()
 
 		self.separators = []
 
-		# create items for the menu - refresh, quit and a separator
+		# Create items for the menu - refresh, quit and a separator
 		menu_separator = gtk.SeparatorMenuItem()
 		self.menu.append(menu_separator)
 
-		# settings button
+		# Settings button
 		btn_settings = gtk.MenuItem('Settings')
 		btn_settings.connect('activate', self.show_settings)
 		self.menu.append(btn_settings)
 
-		# about button
+		# About button
 		btn_about = gtk.MenuItem('About')
 		btn_about.connect('activate', self.show_about)
 		self.menu.append(btn_about)
 
-		# refresh button
+		# Refresh button
 		btn_refresh = gtk.MenuItem('Refresh')
 		btn_refresh.connect('activate', self.refresh, True)  # The last parameter is for not running the timer
 		self.menu.append(btn_refresh)
 
-		# quit button
+		# Quit button
 		btn_quit = gtk.MenuItem('Quit')
 		btn_quit.connect('activate', self.quit)
 		self.menu.append(btn_quit)
@@ -174,10 +174,6 @@ class BlogFeed:
 			print 'Writing to history file..'
 			history = open(get_resource_path(HISTORY_FILE), 'a+')
 			history.write(str(hash(id)) + '\n')  # Write the hashed id to the file
-		else:
-			widget.disconnect(widget.signal_id)
-			widget.set_active(True)
-			widget.signal_id = widget.connect('activate', self.open)
 		webbrowser.open(widget.url)
 
 	def add_item(self, item):
@@ -190,9 +186,10 @@ class BlogFeed:
 		i.item_id = item.id
 		history = open(get_resource_path(HISTORY_FILE), 'r')
 		for line in history.readlines():
-			print hash(i.item_id), str(line)
 			if str(hash(i.item_id)) == str(line).rstrip():
+				i.disconnect(i.signal_id)
 				i.set_active(True)
+				i.signal_id = i.connect('activate', self.open)
 		history.close()
 		self.menu.prepend(i)
 		i.show()
@@ -228,7 +225,7 @@ class BlogFeed:
 			self.menu.prepend(sep)
 		self.menu.remove(sep)  # Remove the top separator --> unnecessary
 
-		# Refresh every 5 minutes
+		# Refresh once every refresh interval
 		if not no_timer:
 			gtk.timeout_add(REFRESH_INTERVAL, self.refresh)
 
@@ -303,16 +300,16 @@ class SettingsPanel:
 			cell = gtk.CellRendererText()
 			cell.connect('edited', self.on_cell_edited, (self.feeds_liststore, i))
 			cell.set_property('editable', True)
-			# the column is created
+			# The column is created
 			col = gtk.TreeViewColumn(columns[i], cell, text=i)
-			# and it is appended to the treeview
+			# And it is appended to the TreeView
 			self.treeview.append_column(col)
 
-		# when a row of the treeview is selected, it emits a signal
+		# When a row of the treeview is selected, it emits a signal and saves row contents into a variable
 		self.selection = self.treeview.get_selection()
 		self.selection.set_mode(gtk.SELECTION_MULTIPLE)
 
-		# a button to add new locations, connected to a callback function
+		# A button to add new locations, connected to a callback function
 		self.button_add = gtk.Button(label="Add")
 		self.button_add.connect("clicked", self.add_cb)
 
