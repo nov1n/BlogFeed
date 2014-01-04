@@ -4,6 +4,8 @@ import json
 import urllib2
 import os
 import pygtk
+import pynotify
+
 pygtk.require('2.0')
 import gtk
 import webbrowser
@@ -11,7 +13,6 @@ import signal
 import appindicator
 from time import time
 
-# TODO: Remove duplicates from history file
 
 DEBUG = 1
 TITLE_LENGTH = 80
@@ -61,14 +62,14 @@ def read_config():
 	return lines
 
 
-def shorten(phrase):
+def shorten(phrase, length=TITLE_LENGTH):
 	""" Shortens the title of a story to the desired length, adds dots for more fancyness """
-	if len(phrase) <= TITLE_LENGTH:
+	if len(phrase) <= length:
 		return phrase
-	elif phrase[TITLE_LENGTH] == ' ':
-		return phrase[:TITLE_LENGTH]
+	elif phrase[length] == ' ':
+		return phrase[:length]
 	else:
-		n = TITLE_LENGTH
+		n = length
 		while not phrase[n] == ' ':
 			n -= 1
 		return phrase[:n] + '...'  # Add dots to show the string was chopped
@@ -192,6 +193,7 @@ class BlogFeed:
 		i.signal_id = i.connect('activate', self.open)
 		i.hn_id = item.id
 		i.item_id = item.id
+		i.title = item.title
 		history = open(get_resource_path(HISTORY_FILE), 'r')
 		for line in history.readlines():
 			if str(hash(i.item_id)) == str(line).rstrip():
@@ -204,10 +206,15 @@ class BlogFeed:
 
 	def refresh(self, widget=None, no_timer=False):
 		""" Refreshes the menu """
+		old_stories = {}
+		new_stories = {}
+
 		# Remove all the current stories
 		for i in self.menu.get_children():
 			if hasattr(i, 'url'):  # needed not to remove the menu items
 				self.menu.remove(i)
+			if hasattr(i, 'item_id'):
+				old_stories[i.item_id] = i.title
 		self.separators[:] = []  # Remove all the separators
 
 		# Fetch all the stories from the desired websites
@@ -219,19 +226,30 @@ class BlogFeed:
 		for site in fetcher.story_collection.itervalues():
 			# Add a title for each site
 			title = gtk.MenuItem('\t\t' + site[0].site)  # Get the name of the site
-			title.url = site[0].site  # This prevents it from being removed on refresh
+			title.url = site[0].site  # This causes it to be removed on refresh
 			title.show()
 
 			# Add the stories from that site
 			for story in reversed(site):
 				self.add_item(story)
+
+				# Check for new stories for the notification
+				if not story.id in old_stories:
+					new_stories[story.id] = story.title
 			sep = gtk.SeparatorMenuItem()
-			sep.url = site[0].site  # This causes it from being removed on refresh
+			sep.url = site[0].site  # This causes it to be removed on refresh
 			self.separators.append(sep)
 			sep.show()
 			self.menu.prepend(title)
 			self.menu.prepend(sep)
 		self.menu.remove(sep)  # Remove the top separator --> unnecessary
+
+		# Generate notification with new stories
+		title = str(len(new_stories)) + ' new stories:'
+		status = '\n'.join([shorten(p, length=50)for p in new_stories.values()])
+
+		pynotify.init('BlogFeed')
+		pynotify.Notification(title, status).show()
 
 		# Refresh once every refresh interval
 		if not no_timer:
@@ -459,7 +477,7 @@ class Fetcher:
 			url = item['url']
 			stories.append(Story(self.HN_NAME, title_short, score, id, date, url))
 
-		self.story_collection[self.HN_NAME] = stories # Add the list of stories to the collection
+		self.story_collection[self.HN_NAME] = stories  # Add the list of stories to the collection
 		if DEBUG: print string_rep(stories)
 
 	def fetch_reddit(self, subr, amount=3):
