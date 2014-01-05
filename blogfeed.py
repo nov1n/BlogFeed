@@ -194,13 +194,17 @@ class BlogFeed:
 		i.hn_id = item.id
 		i.item_id = item.id
 		i.title = item.title
-		history = open(get_resource_path(HISTORY_FILE), 'r')
-		for line in history.readlines():
-			if str(hash(i.item_id)) == str(line).rstrip():
-				i.disconnect(i.signal_id)  # This prevents the self.open callback from firing when adding the story
-				i.set_active(True)
-				i.signal_id = i.connect('activate', self.open)
-		history.close()
+		try:
+			# Check if history file exists
+			with open(get_resource_path(HISTORY_FILE), 'r') as history:
+				for line in history.readlines():
+					if str(hash(i.item_id)) == str(line).rstrip():
+						i.disconnect(i.signal_id)  # This prevents the self.open callback from firing when adding the story
+						i.set_active(True)
+						i.signal_id = i.connect('activate', self.open)
+		except IOError:
+			# Generate the file
+			open(get_resource_path(HISTORY_FILE), 'a')
 		self.menu.prepend(i)
 		i.show()
 
