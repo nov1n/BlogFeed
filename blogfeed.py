@@ -245,11 +245,12 @@ class BlogFeed:
 		self.menu.remove(sep)  # Remove the top separator --> unnecessary
 
 		# Generate notification with new stories
-		title = str(len(new_stories)) + ' new stories:'
-		status = '\n'.join([shorten(p, length=50)for p in new_stories.values()])
+		if len(new_stories):
+			title = str(len(new_stories)) + ' new stories:'
+			status = '\n'.join([shorten(p, length=50)for p in new_stories.values()])
 
-		pynotify.init('BlogFeed')
-		pynotify.Notification(title, status).show()
+			pynotify.init('BlogFeed')
+			pynotify.Notification(title, status).show()
 
 		# Refresh once every refresh interval
 		if not no_timer:
