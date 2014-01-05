@@ -8,12 +8,19 @@ Inspired by captn3m0's hackertray (https://github.com/captn3m0/hackertray).
 Usage
 ========
 
+Only tested on Ubuntu.
 CD into the folder where the files are located, run: python blogfeed.py.
 
-You can customize the stories being displayed by editing the fetch calls starting at line 134.
-Example: Adding fetcher.fetch_reddit('cats') displays the top 3 stories of the 'cats' subreddit in your tray.
+When you click on a story, your default browser will open the corresponding webpage. A check mark is added to the story to easily show the ones you have already read.
 
-To change the amount of stories displayed for each website add the optional amount parameter to the fetch calls.
-Example: fetcher.fetch_reddit('TodayILearned', amount=10), displays the top 10 stories from the TodayILearned subreddit.
+Through the settings panel new locations can be added. Subreddits can be added by entering r/yourSubReddit with the amount of stories you want BlogFeed to show (default=3). HackerNews is added by simply adding hackernews with the amount of stories you want displayed.
 
+Features
+========
+- Added history file to make read stories persistent upon opening and closing the application
+- Added Settings Panel to easily add new locations
+- Added notifications to display new stories when added
 
+Final Notes
+========
+This is my first Python project so any tips, suggestions and improvements are more than welcome.
