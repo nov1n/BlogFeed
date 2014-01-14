@@ -1,1 +1,5 @@
 feeds.history
+*.swn
+*.swp
+*.swo
+*.pyc
