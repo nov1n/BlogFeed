@@ -7,7 +7,7 @@ Inspired by captn3m0's hackertray (https://github.com/captn3m0/hackertray).
 
 Screenshot
 ========
-![Blogfeed Ubuntu 12.04](http://imgur.com/tNQZ1P0)
+![Blogfeed Ubuntu 12.04](http://i.imgur.com/tNQZ1P0.png)
 
 Usage
 ========
