@@ -5,6 +5,10 @@ Displays news stories from the internet in your system tray.
 Currently HackerNews and Reddit are supported, more might follow.
 Inspired by captn3m0's hackertray (https://github.com/captn3m0/hackertray).
 
+Screenshot
+========
+![Blogfeed Ubuntu 12.04](http://imgur.com/tNQZ1P0)
+
 Usage
 ========
 
