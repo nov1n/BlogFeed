@@ -13,7 +13,23 @@ Usage
 ========
 
 Only tested on Ubuntu.
-CD into the folder where the files are located, run: python blogfeed.py.
+
+First clone the repo like so:
+```
+git clone https://github.com/nov1n/BlogFeed
+```
+
+Then move into the directory:
+```
+cd BlogFeed
+```
+
+Finally run the application:
+```
+python blogfeed.py
+```
+
+Tip: Add the application to run at startup for easy access.
 
 When you click on a story, your default browser will open the corresponding webpage. A check mark is added to the story to easily show the ones you have already read.
 
